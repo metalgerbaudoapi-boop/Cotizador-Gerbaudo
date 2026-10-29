@@ -94,8 +94,21 @@
   $('cambiar').onclick=function(){ mostrarConfig(); };
   window.addEventListener('online', function(){ if(!$('falla').hidden) abrir(); });
 
+  /* La llave del dispositivo se guarda acá, en la app (en el iPhone, lo guardado adentro del Cotizador se borra al cerrar la app) */
+  var KT='cotizador_llave';
+  window.addEventListener('message', function(e){
+    if (!/^https:\/\/[\w.-]+\.googleusercontent\.com$/.test(e.origin)) return;
+    var d=e.data||{};
+    try {
+      if (d.g==='tok?') e.source.postMessage({g:'tok', tok:localStorage.getItem(KT)||''}, e.origin);
+      else if (d.g==='tok!' && typeof d.tok==='string' && d.tok.length>=40) localStorage.setItem(KT, d.tok);
+      else if (d.g==='tok-') localStorage.removeItem(KT);
+    } catch(err){}
+  });
+
   if (/[?&]config\b/.test(location.search)) mostrarConfig(); else abrir();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch(e){}
 })();
 </script>
 </body>
