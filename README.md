@@ -6,6 +6,6 @@ Cáscara de aplicación (PWA) para abrir el Cotizador desde la pantalla de inici
 - La primera vez pide el link del Cotizador (el de "Cualquier usuario") y lo guarda **solo en ese celular**.
 - El acceso está protegido por la contraseña y el registro de dispositivo del propio Cotizador.
 
-Archivos: `index.html` (pantalla de inicio + Cotizador a pantalla completa), `manifest.webmanifest`, `sw.js` (guarda solo esta cáscara), `icons/`.
+Archivos: `index.html` (pantalla de inicio + Cotizador a pantalla completa), `manifest.webmanifest`, `sw.js` (guarda solo esta cáscara), los íconos (`*.png`).
 
 Para volver a configurar el link: abrir la app agregando `?config` al final de la dirección, o usar "Cambiar el link" si no carga.

@@ -1,7 +1,7 @@
 /* Solo guarda la "cáscara" de la app (esta página y los íconos) para que abra rápido.
    El Cotizador en sí siempre se carga en vivo desde Google: acá no se guarda ningún dato. */
-const CACHE = 'cotizador-v2';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/logo.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
+const CACHE = 'cotizador-v3';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== CACHE).map(x => caches.delete(x))))); self.clients.claim(); });
 self.addEventListener('fetch', e => {
