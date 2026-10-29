@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cotizador</title>
+<meta name="theme-color" content="#111111">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cotizador">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-64.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+  :root{--rojo:#990134;--acento:#c8102e;--negro:#111;--gris:#6b6b6b}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--negro);overscroll-behavior:none}
+  #app{position:fixed;inset:0;width:100%;height:100%;border:0;display:block;background:#f4f4f4;padding-top:env(safe-area-inset-top)}
+  .pant{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:#fff;z-index:5;transition:opacity .35s}
+  .pant.fuera{opacity:0;pointer-events:none}
+  .logo{width:min(46vw,190px)}
+  .tit{margin-top:22px;font-size:24px;font-weight:800;letter-spacing:-.01em}
+  .sub{margin-top:4px;color:var(--gris);font-size:14px}
+  .barra{margin-top:28px;width:150px;height:4px;border-radius:4px;background:#eee;overflow:hidden}
+  .barra i{display:block;height:100%;width:40%;background:var(--acento);border-radius:4px;animation:ir 1.1s ease-in-out infinite}
+  @keyframes ir{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+  .caja{width:100%;max-width:400px;margin-top:22px;text-align:left}
+  .caja p{font-size:14.5px;line-height:1.45;color:#333;margin:0 0 10px}
+  .caja input{width:100%;padding:13px;border:1.5px solid #c4c4c4;border-radius:9px;font-size:16px}
+  .btn{display:block;width:100%;margin-top:10px;padding:13px;border-radius:9px;border:1.5px solid #c4c4c4;background:#fff;font-size:16px;font-weight:700;color:var(--negro)}
+  .btn.pri{background:var(--acento);border-color:var(--acento);color:#fff}
+  .err{color:var(--acento);font-size:14px;min-height:18px;margin-top:8px}
+  .pie{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:#aaa;font-size:12px}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<iframe id="app" title="Cotizador" allow="microphone; clipboard-read; clipboard-write; web-share; fullscreen" hidden></iframe>
+
+<!-- Pantalla de inicio -->
+<div class="pant" id="splash">
+  <img class="logo" src="icons/logo.svg" alt="Metalúrgica Gerbaudo">
+  <div class="tit">Cotizador</div>
+  <div class="sub">Metalúrgica Gerbaudo S.A. · Comercial</div>
+  <div class="barra" id="barra"><i></i></div>
+  <div class="caja" id="falla" hidden>
+    <p id="fallaTxt">Está tardando más de lo normal.</p>
+    <button class="btn pri" id="reint">Reintentar</button>
+    <button class="btn" id="fuera">Abrir en el navegador</button>
+    <button class="btn" id="cambiar">Cambiar el link</button>
+  </div>
+  <div class="pie">Metalúrgica Gerbaudo S.A.</div>
+</div>
+
+<!-- Primera vez: pegar el link (queda guardado solo en este celular) -->
+<div class="pant" id="config" hidden>
+  <img class="logo" src="icons/logo.svg" alt="" style="width:min(30vw,120px)">
+  <div class="tit" style="font-size:21px">Configurar el Cotizador</div>
+  <div class="caja">
+    <p>Pegá el <b>link del Cotizador para el celular</b> (el de "Cualquier usuario", termina en <b>/exec</b>).</p>
+    <p style="color:var(--gris);font-size:13px">Se guarda solo en este celular: no queda escrito en ningún lado.</p>
+    <input id="url" type="url" inputmode="url" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec">
+    <div class="err" id="urlErr"></div>
+    <button class="btn pri" id="guardar">Guardar y abrir</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var K='cotizador_url', $=function(id){ return document.getElementById(id); };
+  var app=$('app'), splash=$('splash'), config=$('config'), timer=null;
+  function leer(){ try{ return localStorage.getItem(K)||''; }catch(e){ return ''; } }
+  function guardar(u){ try{ localStorage.setItem(K,u); }catch(e){} }
+  var valido=function(u){ return /^https:\/\/script\.google\.com\/(a\/macros\/[^\/]+|macros)\/s\/[\w-]{20,}\/exec$/.test(u); };
+
+  function mostrarConfig(msg){ splash.hidden=true; config.hidden=false; app.hidden=true; $('url').value=leer(); $('urlErr').textContent=msg||''; }
+  function abrir(){
+    var u=leer(); if(!valido(u)) return mostrarConfig();
+    config.hidden=true; splash.hidden=false; splash.classList.remove('fuera'); $('falla').hidden=true; $('barra').hidden=false;
+    if(!navigator.onLine){ falla('No hay conexión a internet.'); return; }
+    app.hidden=false; app.src=u;
+    clearTimeout(timer); timer=setTimeout(function(){ falla('Está tardando más de lo normal.'); }, 30000);
+  }
+  function falla(t){ $('fallaTxt').textContent=t; $('falla').hidden=false; $('barra').hidden=true; }
+  app.addEventListener('load', function(){ if(!app.src) return; clearTimeout(timer); setTimeout(function(){ splash.classList.add('fuera'); }, 600); });
+
+  $('guardar').onclick=function(){ var u=$('url').value.trim().replace(/\?.*$/,'');
+    if(!valido(u)){ $('urlErr').textContent='Ese link no parece el del Cotizador (tiene que terminar en /exec).'; return; }
+    guardar(u); abrir(); };
+  $('reint').onclick=abrir;
+  $('fuera').onclick=function(){ var u=leer(); if(u) location.href=u; };
+  $('cambiar').onclick=function(){ mostrarConfig(); };
+  window.addEventListener('online', function(){ if(!$('falla').hidden) abrir(); });
+
+  if (/[?&]config\b/.test(location.search)) mostrarConfig(); else abrir();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
+})();
+</script>
+</body>
+</html>
